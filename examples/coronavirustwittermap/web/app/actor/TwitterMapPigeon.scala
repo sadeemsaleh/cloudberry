@@ -38,7 +38,7 @@ class TwitterMapPigeon(val factory: WebSocketFactory,
   private val socket: TwitterMapServerToCloudBerrySocket = factory.newSocket(out, config)
   private val clientLogger = Logger("client")
   private val centralCache = TwitterMapApplication.cache
-  private val cacheMaxAge = config.getInt("cache.maxAge").getOrElse(10)
+  private val cacheMaxAge = config.getInt("cache.maxAge").getOrElse(600000)
 
   override def preStart(): Unit = {
     super.preStart
