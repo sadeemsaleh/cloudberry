@@ -38,7 +38,7 @@ class TwitterMapPigeon(val factory: WebSocketFactory,
   private val socket: TwitterMapServerToCloudBerrySocket = factory.newSocket(out, config)
   private val clientLogger = Logger("client")
   private val centralCache = TwitterMapApplication.cache
-  private val maxCacheAge = 10 //todo don't hardcode this
+  private val maxCacheAge = 600000 //todo don't hardcode this
 
 
   override def preStart(): Unit = {
@@ -73,7 +73,7 @@ class TwitterMapPigeon(val factory: WebSocketFactory,
             for ((filter, i) <- filters.value.zipWithIndex) {
               if ((filter \ "field").as[String].equalsIgnoreCase("create_at")) {
                 val value = (filter \ "values").as[ListBuffer[String]]
-                if ((DateTime.now.getMinuteOfHour - DateTime.parse(value(1)).getMinuteOfHour) < maxCacheAge) { //if the end date is within the last 10 minutes
+                if ((DateTime.now.getMillis - DateTime.parse(value(1)).getMillis) < maxCacheAge) { //if the end date is within the last 10 minutes
                   //then remove it from the query and check the cache
                   value -= value(1)
                   val updatedValue = filter.as[JsObject] ++ Json.obj("values" -> value)
@@ -102,7 +102,7 @@ class TwitterMapPigeon(val factory: WebSocketFactory,
     //reformat the json query to be a string to store it as a key in the cache
     val key = filteredQuery.toString().replaceAll("[\\{|\\}|\\[|\\\"|:|\\]]", "")
     if (centralCache.contains(key)) { //check if the query is cached
-      if ((DateTime.now.getMinuteOfHour - centralCache(key)._1.getMinuteOfHour) < maxCacheAge) { //check the freshness of the cached query
+      if ((DateTime.now.getMillis - centralCache(key)._1.getMillis) < maxCacheAge) { //check the freshness of the cached query
         clientLogger.info("[Cache] Good! Returning responses from cache for this request! \n" + query)
         val responses = centralCache(key)._2
         for (response <- responses) {
